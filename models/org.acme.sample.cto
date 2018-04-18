@@ -36,20 +36,47 @@ participant Company extends AbstractUser {
 
 asset UserCredentials identified by credentialId {
   o String credentialId
+  o String title default="unemployed"
   o Endorser[] endorsers
   // o Company[] companies
   o Certificate[] certificates
-  // o WorkCertificate[] WorkCertificates
+  o WorkHistory[] workHistory
   --> Applicant owner
 }
+
+asset WorkHistory identified by workId {
+  o String workId
+  o String description
+  o String start
+  o String end optional
+  o String title
+  --> Company company
+}  
 
 asset Certificate identified by certificateId {
   o String certificateId
   o String description
-  // o DateTime issuedOn
+  o String issuedOn
+  o String expiringOn
   o String status
   --> Endorser issuedBy
-  --> Applicant issueTo
+  --> UserCredentials issuedTo
+}
+
+/*asset CompanyReferrals identified by referralsId {
+  o String referralsId
+  --> Company company
+  --> Referral[] referrals
+}*/
+
+asset Referral identified by referalId {
+  o String referalId
+  o Integer payout 
+  // created or accepted or started or paid/cancelled
+  o String status default="created"
+  --> Company company
+   --> UserCredentials referrer
+   --> UserCredentials referred optional
 }
 
 transaction RequestCertificate {
@@ -68,5 +95,38 @@ transaction IssueCertificate {
 
 transaction RevokeCertificate {
   --> Certificate certificate
+  --> UserCredentials credential
   /* notify applicant */
+}
+
+transaction ReferralOfferTransaction {
+  o String id
+  o Integer amount
+  --> UserCredentials referrer
+  --> Company company
+}
+  
+transaction ReferralAcceptedTransaction {
+  --> Referral referral
+  --> UserCredentials referred
+}  
+
+transaction HireWithReferral {
+  --> Referral referral
+  --> Company company
+  o String title
+  o String workHistoryId
+}
+
+transaction UpdateTitle {
+  o WorkHistory workHistory
+  --> UserCredentials credentials
+}
+
+transaction Payout {
+  --> Referral referral
+} 
+
+transaction SetUpDemo {
+  
 }
