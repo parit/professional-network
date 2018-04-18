@@ -1,0 +1,128 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Sample business network definition.
+ */
+namespace org.acme.sample
+
+abstract participant AbstractUser identified by name {
+  o String name
+}
+
+
+participant Applicant extends AbstractUser {
+  o Integer age
+}
+
+participant Endorser extends AbstractUser {
+  o String description
+}
+
+participant Company extends AbstractUser {
+  o String description
+}
+
+asset UserCredentials identified by credentialId {
+  o String credentialId
+  o String title default="unemployed"
+  o Endorser[] endorsers
+  // o Company[] companies
+  o Certificate[] certificates
+  o WorkHistory[] workHistory
+  --> Applicant owner
+}
+
+asset WorkHistory identified by workId {
+  o String workId
+  o String description
+  o String start
+  o String end optional
+  o String title
+  --> Company company
+}  
+
+asset Certificate identified by certificateId {
+  o String certificateId
+  o String description
+  o String issuedOn
+  o String expiringOn
+  o String status
+  --> Endorser issuedBy
+  --> UserCredentials issuedTo
+}
+
+asset CompanyReferrals identified by referralsId {
+  o String referralsId
+  --> Company company
+  --> Referral[] referrals
+}
+
+asset Referral identified by referalId {
+  o String referalId
+  o Integer payout 
+  // created or accepted or started or paid/cancelled
+  o String status default="created"
+  --> Company company
+   --> UserCredentials referrer
+   --> UserCredentials referred optional
+}
+
+transaction RequestCertificate {
+  --> Endorser endorser
+  --> UserCredentials credentials
+  /* notify endorser */
+}
+
+transaction IssueCertificate {
+  o String certId
+  o String description
+  --> UserCredentials credential
+  --> Endorser endorser 
+  /* notify applicant */
+}
+
+transaction RevokeCertificate {
+  --> Certificate certificate
+  --> UserCredentials credential
+  /* notify applicant */
+}
+
+transaction ReferralOfferTransaction {
+  o String id
+  o Integer amount
+  --> UserCredentials referrer
+  --> Company company
+}
+  
+transaction ReferralAcceptedTransaction {
+  --> Referral referral
+  --> UserCredentials referred
+}  
+
+transaction HireWithReferral {
+  --> Referral referral
+  --> Company company
+  o String title
+  o String workHistoryId
+}
+
+transaction UpdateTitle {
+  o WorkHistory workHistory
+  --> UserCredentials credentials
+}
+
+transaction Payout {
+  --> Referral referral
+} 
